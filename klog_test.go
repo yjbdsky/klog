@@ -639,3 +639,11 @@ func TestInitFlags(t *testing.T) {
 		t.Fatal("Expected log_file_max_size to be 2048")
 	}
 }
+
+func TestSetColorEnabled(t *testing.T) {
+	SetColorEnabled(true)
+	Infof("%s", "===info===")
+	Warningf("%s", "===warning===")
+	Errorf("%s", "===error===")
+	Fatalf("%s", "===fatalf===")
+}

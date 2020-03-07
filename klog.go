@@ -89,6 +89,7 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	"github.com/google/goterm/term"
 )
 
 // severity identifies the sort of log: info, warning etc. It also implements
@@ -502,12 +503,14 @@ type loggingT struct {
 
 	// If set, all output will be redirected unconditionally to the provided logr.Logger
 	logr logr.Logger
+
+	colorEnable bool
 }
 
 // buffer holds a byte Buffer for reuse. The zero value is ready for use.
 type buffer struct {
 	bytes.Buffer
-	tmp  [64]byte // temporary byte array for creating headers.
+	tmp  [80]byte // temporary byte array for creating headers.
 	next *buffer
 }
 
@@ -640,6 +643,23 @@ func (l *loggingT) formatHeader(s severity, file string, line int) *buffer {
 	buf.tmp[n+1] = ']'
 	buf.tmp[n+2] = ' '
 	buf.Write(buf.tmp[:n+3])
+
+	tmp := buf.String()
+	if l.colorEnable {
+		switch s {
+		case fatalLog:
+			tmp = term.Magentaf("%s", tmp)
+		case errorLog:
+			tmp = term.Redf("%s", tmp)
+		case warningLog:
+			tmp = term.Yellowf("%s", tmp)
+		case infoLog:
+			tmp = term.Bluef("%s", tmp)
+		}
+		buf.Reset()
+		buf.WriteString(tmp)
+	}
+
 	return buf
 }
 
@@ -787,6 +807,10 @@ func SetOutput(w io.Writer) {
 		}
 		logging.file[s] = rb
 	}
+}
+
+func SetColorEnabled(b bool) {
+	logging.colorEnable = b
 }
 
 // SetOutputBySeverity sets the output destination for specific severity

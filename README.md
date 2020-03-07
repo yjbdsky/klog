@@ -13,7 +13,7 @@ func TestSetColorEnabled(t *testing.T) {
 }
 ```
 out:  
-![](https://github.com/yjbdsky/klog/blob/master/img/4aa07cf9.png?raw=true)
+![](https://github.com/yjbdsky/klog/blob/master/img/4aa07cf9.png)
 
 klog is a permanent fork of https://github.com/golang/glog.
 

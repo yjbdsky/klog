@@ -1,6 +1,20 @@
 klog
 ====
 
+## 在klog基础上增加终端颜色输出
+
+```go
+func TestSetColorEnabled(t *testing.T) {
+	SetColorEnabled(true)
+	Infof("%s", "===info===")
+	Warningf("%s", "===warning===")
+	Errorf("%s", "===error===")
+	Fatalf("%s", "===fatalf===")
+}
+```
+out:  
+![](img/4aa07cf9.png)
+
 klog is a permanent fork of https://github.com/golang/glog.
 
 ## Why was klog created?

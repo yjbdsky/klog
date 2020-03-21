@@ -1,4 +1,4 @@
-module github/yjbdsky/klog/v2
+module github.com/yjbdsky/klog/v2
 
 go 1.12
 

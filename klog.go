@@ -813,6 +813,10 @@ func SetColorEnabled(b bool) {
 	logging.colorEnable = b
 }
 
+func SetLogFile(path string) {
+	logging.logFile = path
+}
+
 // SetOutputBySeverity sets the output destination for specific severity
 func SetOutputBySeverity(name string, w io.Writer) {
 	logging.mu.Lock()

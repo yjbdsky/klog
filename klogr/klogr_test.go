@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/go-logr/logr"
-	"k8s.io/klog"
+	"github.com/yjbdsky/klog"
 )
 
 func TestInfo(t *testing.T) {

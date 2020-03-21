@@ -642,6 +642,7 @@ func TestInitFlags(t *testing.T) {
 
 func TestSetColorEnabled(t *testing.T) {
 	SetColorEnabled(true)
+	//SetDump(true)
 	Infof("%s", "===info===")
 	Warningf("%s", "===warning===")
 	Errorf("%s", "===error===")

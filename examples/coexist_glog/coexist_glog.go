@@ -4,7 +4,7 @@ import (
 	"flag"
 
 	"github.com/golang/glog"
-	"k8s.io/klog"
+	"github.com/yjbdsky/klog"
 )
 
 func main() {

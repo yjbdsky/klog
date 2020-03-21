@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 
-	"k8s.io/klog"
+	"github.com/yjbdsky/klog"
 )
 
 func main() {

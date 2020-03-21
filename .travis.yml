@@ -1,5 +1,5 @@
 language: go
-go_import_path: k8s.io/klog/v2
+go_import_path: github.com/yjbdsky/klog/v2
 dist: xenial
 go:
   - 1.11.x

@@ -411,6 +411,7 @@ func init() {
 	logging.skipHeaders = false
 	logging.addDirHeader = false
 	logging.skipLogHeaders = false
+	logging.dump = true
 	go logging.flushDaemon()
 }
 
@@ -430,7 +431,7 @@ func InitFlags(flagset *flag.FlagSet) {
 	flagset.Var(&logging.verbosity, "v", "number for the log level verbosity")
 	flagset.BoolVar(&logging.addDirHeader, "add_dir_header", logging.addDirHeader, "If true, adds the file directory to the header")
 	flagset.BoolVar(&logging.skipHeaders, "skip_headers", logging.skipHeaders, "If true, avoid header prefixes in the log messages")
-	flagset.BoolVar(&logging.dump, "dump", false, "If true, Dump all goroutine stacks before exiting")
+	flagset.BoolVar(&logging.dump, "dump", true, "If true, Dump all goroutine stacks before exiting")
 	flagset.BoolVar(&logging.skipLogHeaders, "skip_log_headers", logging.skipLogHeaders, "If true, avoid headers when opening log files")
 	flagset.Var(&logging.stderrThreshold, "stderrthreshold", "logs at or above this threshold go to stderr")
 	flagset.Var(&logging.vmodule, "vmodule", "comma-separated list of pattern=N settings for file-filtered logging")

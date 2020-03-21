@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 
-	"k8s.io/klog"
+	"github.com/yjbdsky/klog"
 )
 
 func main() {

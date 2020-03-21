@@ -823,6 +823,9 @@ func SetLogFile(path string) {
 func SetDump(b bool) {
 	logging.dump = b
 }
+func SetLogFileMaxSizeMB(max uint64) {
+	logging.logFileMaxSizeMB = max
+}
 
 // SetOutputBySeverity sets the output destination for specific severity
 func SetOutputBySeverity(name string, w io.Writer) {

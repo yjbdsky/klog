@@ -5,9 +5,8 @@ import (
 	"flag"
 	"testing"
 
-	"k8s.io/klog/v2"
-
 	"github.com/go-logr/logr"
+	"k8s.io/klog"
 )
 
 func TestInfo(t *testing.T) {

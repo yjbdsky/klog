@@ -430,6 +430,7 @@ func InitFlags(flagset *flag.FlagSet) {
 	flagset.Var(&logging.verbosity, "v", "number for the log level verbosity")
 	flagset.BoolVar(&logging.addDirHeader, "add_dir_header", logging.addDirHeader, "If true, adds the file directory to the header")
 	flagset.BoolVar(&logging.skipHeaders, "skip_headers", logging.skipHeaders, "If true, avoid header prefixes in the log messages")
+	flagset.BoolVar(&logging.dump, "dump", false, "If true, Dump all goroutine stacks before exiting")
 	flagset.BoolVar(&logging.skipLogHeaders, "skip_log_headers", logging.skipLogHeaders, "If true, avoid headers when opening log files")
 	flagset.Var(&logging.stderrThreshold, "stderrthreshold", "logs at or above this threshold go to stderr")
 	flagset.Var(&logging.vmodule, "vmodule", "comma-separated list of pattern=N settings for file-filtered logging")
@@ -505,6 +506,8 @@ type loggingT struct {
 	logr logr.Logger
 
 	colorEnable bool
+
+	dump bool
 }
 
 // buffer holds a byte Buffer for reuse. The zero value is ready for use.
@@ -816,6 +819,9 @@ func SetColorEnabled(b bool) {
 func SetLogFile(path string) {
 	logging.logFile = path
 }
+func SetDump(b bool) {
+	logging.dump = b
+}
 
 // SetOutputBySeverity sets the output destination for specific severity
 func SetOutputBySeverity(name string, w io.Writer) {
@@ -896,7 +902,7 @@ func (l *loggingT) output(s severity, log logr.InfoLogger, buf *buffer, file str
 			os.Exit(1)
 		}
 		// Dump all goroutine stacks before exiting.
-		trace := stacks(true)
+		trace := stacks(l.dump)
 		// Write the stack trace for all goroutines to the stderr.
 		if l.toStderr || l.alsoToStderr || s >= l.stderrThreshold.get() || alsoToStderr {
 			os.Stderr.Write(trace)
@@ -940,10 +946,13 @@ func timeoutFlush(timeout time.Duration) {
 // stacks is a wrapper for runtime.Stack that attempts to recover the data for all goroutines.
 func stacks(all bool) []byte {
 	// We don't know how big the traces are, so grow a few times if they don't fit. Start large, though.
-	n := 10000
-	if all {
-		n = 100000
+	if !all {
+		return nil
 	}
+	n := 10000
+	//if all {
+	//	n = 100000
+	//}
 	var trace []byte
 	for i := 0; i < 5; i++ {
 		trace = make([]byte, n)

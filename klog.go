@@ -494,6 +494,8 @@ type loggingT struct {
 	// logFile will be cleaned up. If this value is 0, no size limitation will be applied to logFile.
 	logFileMaxSizeMB uint64
 
+	logFileNum int
+
 	// If true, do not add the prefix headers, useful when used with SetOutput
 	skipHeaders bool
 
@@ -819,12 +821,18 @@ func SetColorEnabled(b bool) {
 
 func SetLogFile(path string) {
 	logging.logFile = path
+	logFileSize = getFileSize()
+	fmt.Println("==get:", logFileSize)
 }
 func SetDump(b bool) {
 	logging.dump = b
 }
 func SetLogFileMaxSizeMB(max uint64) {
 	logging.logFileMaxSizeMB = max
+}
+
+func SetLogFileNum(num int) {
+	logging.logFileNum = num
 }
 
 // SetOutputBySeverity sets the output destination for specific severity
@@ -1021,6 +1029,7 @@ func CalculateMaxSize() uint64 {
 }
 
 func (sb *syncBuffer) Write(p []byte) (n int, err error) {
+	fmt.Println("====sb.nbytes:", sb.nbytes)
 	if sb.nbytes+uint64(len(p)) >= sb.maxbytes {
 		if err := sb.rotateFile(time.Now(), false); err != nil {
 			sb.logger.exit(err)
@@ -1044,7 +1053,9 @@ func (sb *syncBuffer) rotateFile(now time.Time, startup bool) error {
 	}
 	var err error
 	sb.file, _, err = create(severityName[sb.sev], now, startup)
-	sb.nbytes = 0
+	if !startup {
+		sb.nbytes = 0
+	}
 	if err != nil {
 		return err
 	}
@@ -1082,7 +1093,9 @@ func (l *loggingT) createFiles(sev severity) error {
 			logger:   l,
 			sev:      s,
 			maxbytes: CalculateMaxSize(),
+			nbytes:   logFileSize, // 每次重启无法获取日志文件大小
 		}
+		fmt.Println("nbytes:", sb.nbytes)
 		if err := sb.rotateFile(now, true); err != nil {
 			return err
 		}

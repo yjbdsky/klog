@@ -822,7 +822,6 @@ func SetColorEnabled(b bool) {
 func SetLogFile(path string) {
 	logging.logFile = path
 	logFileSize = getFileSize()
-	fmt.Println("==get:", logFileSize)
 }
 func SetDump(b bool) {
 	logging.dump = b
@@ -1029,7 +1028,6 @@ func CalculateMaxSize() uint64 {
 }
 
 func (sb *syncBuffer) Write(p []byte) (n int, err error) {
-	fmt.Println("====sb.nbytes:", sb.nbytes)
 	if sb.nbytes+uint64(len(p)) >= sb.maxbytes {
 		if err := sb.rotateFile(time.Now(), false); err != nil {
 			sb.logger.exit(err)
@@ -1095,7 +1093,6 @@ func (l *loggingT) createFiles(sev severity) error {
 			maxbytes: CalculateMaxSize(),
 			nbytes:   logFileSize, // 每次重启无法获取日志文件大小
 		}
-		fmt.Println("nbytes:", sb.nbytes)
 		if err := sb.rotateFile(now, true); err != nil {
 			return err
 		}

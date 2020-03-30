@@ -510,7 +510,9 @@ type loggingT struct {
 
 	colorEnable bool
 
-	dump bool
+	dump          bool
+	isSetExitCode bool
+	ExitCode      int
 }
 
 // buffer holds a byte Buffer for reuse. The zero value is ready for use.
@@ -818,6 +820,10 @@ func SetOutput(w io.Writer) {
 func SetColorEnabled(b bool) {
 	logging.colorEnable = b
 }
+func SetExitCode(code int) {
+	logging.isSetExitCode = true
+	logging.ExitCode = code
+}
 
 func SetLogFile(path string) {
 	logging.logFile = path
@@ -993,6 +999,9 @@ func (l *loggingT) exit(err error) {
 		return
 	}
 	l.flushAll()
+	if l.isSetExitCode {
+		os.Exit(l.ExitCode)
+	}
 	os.Exit(2)
 }
 

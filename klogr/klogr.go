@@ -1,5 +1,4 @@
 // Package klogr implements github.com/go-logr/logr.Logger in terms of
-// k8s.io/klog.
 package klogr
 
 import (

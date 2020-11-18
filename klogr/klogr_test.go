@@ -2,7 +2,10 @@ package klogr
 
 import (
 	"bytes"
+	"encoding/json"
+	"errors"
 	"flag"
+	"strings"
 	"testing"
 
 	"github.com/go-logr/logr"
@@ -18,7 +21,7 @@ func TestInfo(t *testing.T) {
 	flag.Parse()
 
 	tests := map[string]struct {
-		klogr          logr.InfoLogger
+		klogr          logr.Logger
 		text           string
 		keysAndValues  []interface{}
 		expectedOutput string
@@ -64,11 +67,31 @@ func TestInfo(t *testing.T) {
 			expectedOutput: ` "msg"="test"  "akey"="avalue" "akey2"=null
 `,
 		},
+		"should correctly html characters": {
+			text:          "test",
+			keysAndValues: []interface{}{"akey", "<&>"},
+			expectedOutput: ` "msg"="test"  "akey"="<&>"
+`,
+		},
 		"should correctly handle odd-numbers of KVs in both log values and Info args": {
 			klogr:         New().WithValues("basekey1", "basevar1", "basekey2"),
 			text:          "test",
 			keysAndValues: []interface{}{"akey", "avalue", "akey2"},
 			expectedOutput: ` "msg"="test" "basekey1"="basevar1" "basekey2"=null "akey"="avalue" "akey2"=null
+`,
+		},
+		"should correctly print regular error types": {
+			klogr:         New().V(0),
+			text:          "test",
+			keysAndValues: []interface{}{"err", errors.New("whoops")},
+			expectedOutput: ` "msg"="test"  "err"="whoops"
+`,
+		},
+		"should use MarshalJSON if an error type implements it": {
+			klogr:         New().V(0),
+			text:          "test",
+			keysAndValues: []interface{}{"err", &customErrorJSON{"whoops"}},
+			expectedOutput: ` "msg"="test"  "err"="WHOOPS"
 `,
 		},
 	}
@@ -93,4 +116,16 @@ func TestInfo(t *testing.T) {
 			}
 		})
 	}
+}
+
+type customErrorJSON struct {
+	s string
+}
+
+func (e *customErrorJSON) Error() string {
+	return e.s
+}
+
+func (e *customErrorJSON) MarshalJSON() ([]byte, error) {
+	return json.Marshal(strings.ToUpper(e.s))
 }

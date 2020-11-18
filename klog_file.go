@@ -24,6 +24,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -31,7 +32,6 @@ import (
 
 // MaxSize is the maximum size of a log file in bytes.
 var MaxSize uint64 = 1024 * 1024 * 1800
-var logFileSize uint64
 
 // logDirs lists the candidate directories for new log files.
 var logDirs []string
@@ -43,38 +43,50 @@ func createLogDirs() {
 	logDirs = append(logDirs, os.TempDir())
 }
 
-func getFileSize() uint64 {
-	if logging.logFile != "" {
-		f, err := os.Stat(logging.logFile)
-		if err != nil {
-			return 0
-		}
-		return uint64(f.Size())
-	}
-	return 0
-}
-
 var (
-	pid      = os.Getpid()
-	program  = filepath.Base(os.Args[0])
-	host     = "unknownhost"
-	userName = "unknownuser"
+	pid          = os.Getpid()
+	program      = filepath.Base(os.Args[0])
+	host         = "unknownhost"
+	userName     = "unknownuser"
+	userNameOnce sync.Once
 )
 
 func init() {
-	h, err := os.Hostname()
-	if err == nil {
+	if h, err := os.Hostname(); err == nil {
 		host = shortHostname(h)
 	}
+}
 
-	current, err := user.Current()
-	if err == nil {
-		userName = current.Username
-	}
+func getUserName() string {
+	userNameOnce.Do(func() {
+		// On Windows, the Go 'user' package requires netapi32.dll.
+		// This affects Windows Nano Server:
+		//   https://github.com/golang/go/issues/21867
+		// Fallback to using environment variables.
+		if runtime.GOOS == "windows" {
+			u := os.Getenv("USERNAME")
+			if len(u) == 0 {
+				return
+			}
+			// Sanitize the USERNAME since it may contain filepath separators.
+			u = strings.Replace(u, `\`, "_", -1)
 
-	// Sanitize userName since it may contain filepath separators on Windows.
-	userName = strings.Replace(userName, `\`, "_", -1)
-	logFileSize = getFileSize()
+			// user.Current().Username normally produces something like 'USERDOMAIN\USERNAME'
+			d := os.Getenv("USERDOMAIN")
+			if len(d) != 0 {
+				userName = d + "_" + u
+			} else {
+				userName = u
+			}
+		} else {
+			current, err := user.Current()
+			if err == nil {
+				userName = current.Username
+			}
+		}
+	})
+
+	return userName
 }
 
 // shortHostname returns its argument, truncating at the first period.
@@ -92,7 +104,7 @@ func logName(tag string, t time.Time) (name, link string) {
 	name = fmt.Sprintf("%s.%s.%s.log.%s.%04d%02d%02d-%02d%02d%02d.%d",
 		program,
 		host,
-		userName,
+		getUserName(),
 		tag,
 		t.Year(),
 		t.Month(),
@@ -147,28 +159,6 @@ func openOrCreate(name string, startup bool) (*os.File, error) {
 		f, err := os.OpenFile(name, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		return f, err
 	}
-	//todo 实现备份逻辑
-	if name != "" && logging.logFileNum > 0 {
-		var backupFileName, nextFileName string
-		for i := logging.logFileNum; i >= 0; i-- {
-			backupFileName = fmt.Sprintf("%s.%d", name, i)
-			if i == 0 {
-				backupFileName = name
-			}
-
-			nextFileName = fmt.Sprintf("%s.%d", name, i+1)
-
-			_, err := os.Stat(backupFileName)
-			if err == nil {
-				if i == logging.logFileNum {
-					os.Remove(backupFileName)
-				} else {
-					os.Rename(backupFileName, nextFileName)
-				}
-			}
-		}
-	}
-
 	f, err := os.Create(name)
 	return f, err
 }

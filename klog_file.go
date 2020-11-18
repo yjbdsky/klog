@@ -32,6 +32,7 @@ import (
 
 // MaxSize is the maximum size of a log file in bytes.
 var MaxSize uint64 = 1024 * 1024 * 1800
+var logFileSize uint64
 
 // logDirs lists the candidate directories for new log files.
 var logDirs []string
@@ -43,6 +44,17 @@ func createLogDirs() {
 	logDirs = append(logDirs, os.TempDir())
 }
 
+func getFileSize() uint64 {
+	if logging.logFile != "" {
+		f, err := os.Stat(logging.logFile)
+		if err != nil {
+			return 0
+		}
+		return uint64(f.Size())
+	}
+	return 0
+}
+
 var (
 	pid          = os.Getpid()
 	program      = filepath.Base(os.Args[0])
@@ -52,6 +64,7 @@ var (
 )
 
 func init() {
+	logFileSize = getFileSize()
 	if h, err := os.Hostname(); err == nil {
 		host = shortHostname(h)
 	}
@@ -159,6 +172,28 @@ func openOrCreate(name string, startup bool) (*os.File, error) {
 		f, err := os.OpenFile(name, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		return f, err
 	}
+	//todo 实现备份逻辑
+	if name != "" && logging.logFileNum > 0 {
+		var backupFileName, nextFileName string
+		for i := logging.logFileNum; i >= 0; i-- {
+			backupFileName = fmt.Sprintf("%s.%d", name, i)
+			if i == 0 {
+				backupFileName = name
+			}
+
+			nextFileName = fmt.Sprintf("%s.%d", name, i+1)
+
+			_, err := os.Stat(backupFileName)
+			if err == nil {
+				if i == logging.logFileNum {
+					os.Remove(backupFileName)
+				} else {
+					os.Rename(backupFileName, nextFileName)
+				}
+			}
+		}
+	}
+
 	f, err := os.Create(name)
 	return f, err
 }

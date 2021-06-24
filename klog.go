@@ -89,7 +89,7 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"github.com/google/goterm/term"
+	"github.com/yjbdsky/klog/term"
 )
 
 // severity identifies the sort of log: info, warning etc. It also implements

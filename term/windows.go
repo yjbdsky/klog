@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package term
@@ -38,9 +39,12 @@ type Color struct {
 // 输出有颜色的字体
 func ColorPrint(s string, i int) string {
 	handle, _, _ := proc.Call(uintptr(syscall.Stdout), uintptr(i))
-
 	defer CloseHandle.Call(handle)
 	return s
+}
+
+func Whitef(format string, a ...interface{}) string {
+	return ColorPrint(fmt.Sprintf(format, a), FontColor.white)
 }
 
 func Magentaf(format string, a ...interface{}) string {

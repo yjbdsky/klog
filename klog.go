@@ -511,7 +511,7 @@ type loggingT struct {
 	addDirHeader bool
 
 	// If set, all output will be redirected unconditionally to the provided logr.Logger
-	logr logr.Logger
+	logr *logr.Logger
 
 	// If true, messages will not be propagated to lower severity log levels
 	oneOutput bool
@@ -723,7 +723,7 @@ func (buf *buffer) someDigits(i, d int) int {
 	return copy(buf.tmp[i:], buf.tmp[j:])
 }
 
-func (l *loggingT) println(s severity, logr logr.Logger, filter LogFilter, args ...interface{}) {
+func (l *loggingT) println(s severity, logr *logr.Logger, filter LogFilter, args ...interface{}) {
 	buf, file, line := l.header(s, 0)
 	// if logr is set, we clear the generated header as we rely on the backing
 	// logr implementation to print headers
@@ -738,11 +738,11 @@ func (l *loggingT) println(s severity, logr logr.Logger, filter LogFilter, args 
 	l.output(s, logr, buf, file, line, false)
 }
 
-func (l *loggingT) print(s severity, logr logr.Logger, filter LogFilter, args ...interface{}) {
+func (l *loggingT) print(s severity, logr *logr.Logger, filter LogFilter, args ...interface{}) {
 	l.printDepth(s, logr, filter, 1, args...)
 }
 
-func (l *loggingT) printDepth(s severity, logr logr.Logger, filter LogFilter, depth int, args ...interface{}) {
+func (l *loggingT) printDepth(s severity, logr *logr.Logger, filter LogFilter, depth int, args ...interface{}) {
 	buf, file, line := l.header(s, depth)
 	// if logr is set, we clear the generated header as we rely on the backing
 	// logr implementation to print headers
@@ -760,7 +760,7 @@ func (l *loggingT) printDepth(s severity, logr logr.Logger, filter LogFilter, de
 	l.output(s, logr, buf, file, line, false)
 }
 
-func (l *loggingT) printf(s severity, logr logr.Logger, filter LogFilter, format string, args ...interface{}) {
+func (l *loggingT) printf(s severity, logr *logr.Logger, filter LogFilter, format string, args ...interface{}) {
 	buf, file, line := l.header(s, 0)
 	// if logr is set, we clear the generated header as we rely on the backing
 	// logr implementation to print headers
@@ -781,7 +781,7 @@ func (l *loggingT) printf(s severity, logr logr.Logger, filter LogFilter, format
 // printWithFileLine behaves like print but uses the provided file and line number.  If
 // alsoLogToStderr is true, the log message always appears on standard error; it
 // will also appear in the log file unless --logtostderr is set.
-func (l *loggingT) printWithFileLine(s severity, logr logr.Logger, filter LogFilter, file string, line int, alsoToStderr bool, args ...interface{}) {
+func (l *loggingT) printWithFileLine(s severity, logr *logr.Logger, filter LogFilter, file string, line int, alsoToStderr bool, args ...interface{}) {
 	buf := l.formatHeader(s, file, line)
 	// if logr is set, we clear the generated header as we rely on the backing
 	// logr implementation to print headers
@@ -800,7 +800,7 @@ func (l *loggingT) printWithFileLine(s severity, logr logr.Logger, filter LogFil
 }
 
 // if loggr is specified, will call loggr.Error, otherwise output with logging module.
-func (l *loggingT) errorS(err error, loggr logr.Logger, filter LogFilter, msg string, keysAndValues ...interface{}) {
+func (l *loggingT) errorS(err error, loggr *logr.Logger, filter LogFilter, msg string, keysAndValues ...interface{}) {
 	if filter != nil {
 		msg, keysAndValues = filter.FilterS(msg, keysAndValues)
 	}
@@ -812,7 +812,7 @@ func (l *loggingT) errorS(err error, loggr logr.Logger, filter LogFilter, msg st
 }
 
 // if loggr is specified, will call loggr.Info, otherwise output with logging module.
-func (l *loggingT) infoS(loggr logr.Logger, filter LogFilter, msg string, keysAndValues ...interface{}) {
+func (l *loggingT) infoS(loggr *logr.Logger, filter LogFilter, msg string, keysAndValues ...interface{}) {
 	if filter != nil {
 		msg, keysAndValues = filter.FilterS(msg, keysAndValues)
 	}
@@ -893,7 +893,7 @@ func (rb *redirectBuffer) Write(bytes []byte) (n int, err error) {
 // Use as:
 //   ...
 //   klog.SetLogger(zapr.NewLogger(zapLog))
-func SetLogger(logr logr.Logger) {
+func SetLogger(logr *logr.Logger) {
 	logging.logr = logr
 }
 
@@ -955,7 +955,7 @@ func LogToStderr(stderr bool) {
 }
 
 // output writes the data to the log files and releases the buffer.
-func (l *loggingT) output(s severity, log logr.Logger, buf *buffer, file string, line int, alsoToStderr bool) {
+func (l *loggingT) output(s severity, log *logr.Logger, buf *buffer, file string, line int, alsoToStderr bool) {
 	l.mu.Lock()
 	if l.traceLocation.isSet() {
 		if l.traceLocation.match(file, line) {
@@ -1326,7 +1326,7 @@ func (l *loggingT) setV(pc uintptr) Level {
 // See the documentation of V for more information.
 type Verbose struct {
 	enabled bool
-	logr    logr.Logger
+	logr    *logr.Logger
 	filter  LogFilter
 }
 
@@ -1334,7 +1334,8 @@ func newVerbose(level Level, b bool) Verbose {
 	if logging.logr == nil {
 		return Verbose{b, nil, logging.filter}
 	}
-	return Verbose{b, logging.logr.V(int(level)), logging.filter}
+	v := logging.logr.V(int(level))
+	return Verbose{b, &v, logging.filter}
 }
 
 // V reports whether verbosity at the call site is at least the requested level.

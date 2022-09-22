@@ -446,7 +446,7 @@ func testVmoduleGlob(pat string, match bool, t *testing.T) {
 	defer logging.vmodule.Set("")
 	logging.vmodule.Set(pat)
 	if V(2).Enabled() != match {
-		t.Errorf("incorrect match for %q: got %t expected %t", pat, V(2), match)
+		t.Errorf("incorrect match for %q: got %T expected %t", pat, V(2), match)
 	}
 }
 
@@ -1270,7 +1270,7 @@ func TestInfoSWithLogr(t *testing.T) {
 
 	for _, data := range testDataInfo {
 		t.Run(data.msg, func(t *testing.T) {
-			SetLogger(logger)
+			SetLogger(nil)
 			defer SetLogger(nil)
 			defer logger.reset()
 
@@ -1337,7 +1337,7 @@ func TestErrorSWithLogr(t *testing.T) {
 
 	for _, data := range testDataInfo {
 		t.Run(data.msg, func(t *testing.T) {
-			SetLogger(logger)
+			SetLogger(nil)
 			defer SetLogger(nil)
 			defer logger.reset()
 

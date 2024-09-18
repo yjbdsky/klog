@@ -2,6 +2,7 @@ klog
 ====
 
 ## 在klog基础上增加终端颜色输出
+## 支持windows终端颜色输出
 
 ```go
 func TestSetColorEnabled(t *testing.T) {
